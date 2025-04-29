@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="chu_dao">#FF5000</color>
+    <color name="defaul_item">#1C1C1E</color>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">images.cinema.tl</domain>
+        <domain includeSubdomains="true">10.226.234.18</domain>
+        <domain includeSubdomains="true">43.243.120.57</domain>
+        <domain includeSubdomains="true">43.243.120.58</domain>
+        <domain includeSubdomains="true">apicdn.tls.tl</domain>
+    </domain-config>
+</network-security-config>
