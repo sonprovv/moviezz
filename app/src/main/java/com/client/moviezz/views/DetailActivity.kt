@@ -215,6 +215,68 @@ class DetailActivity : AppCompatActivity() {
         }
     }
 
+    // Hàm mới để cập nhật phim mới mà không tạo lại activity
+    private fun updateFilm(filmId: Int) {
+        Log.d("hoho", "Updating film with ID: $filmId")
+
+        // Lưu lịch sử của phim hiện tại trước khi chuyển
+        player?.let { currentPlayer ->
+            val currentHistory = HistoryMovie(
+                movieId = currentFilmId.toString(),
+                videoLink = currentVideoLink,
+                movieTitle = currentMovieTitle,
+                movieImage = currentMovieImage,
+                lastPosition = currentPlayer.currentPosition,
+                duration = currentPlayer.duration,
+                lastWatched = System.currentTimeMillis(),
+                episodeNumber = currentEpisodeNumber
+            )
+            Log.d("hoho", "Saving history before switching film: $currentHistory")
+            lifecycleScope.launch {
+                detailViewModel.insertOrUpdate(currentHistory)
+            }
+        }
+
+        // Reset trạng thái
+        currentFilmId = filmId
+        currentVideoLink = ""
+        currentEpisodeNumber = ""
+        playbackPosition = 0L
+        isPhimBo = false
+        isFullscreen = false
+        currentMovieTitle = ""
+        currentMovieImage = ""
+
+        // Reset trình phát
+        player?.let {
+            it.stop()
+            it.clearMediaItems()
+            Log.d("hoho", "Player reset for new film")
+        } ?: Log.w("hoho", "Player is null during reset")
+
+        // Reset adapters
+        episodeAdapter.submitList(emptyList())
+        episodeFullScreenAdapter.submitList(emptyList())
+        relatedFilmAdapter.submitList(emptyList())
+        filmFullscreenAdapter.submitList(emptyList())
+        Log.d("hoho", "Adapters reset")
+
+        // Reset giao diện
+        tvNameFilm.text = ""
+        tvLuotXem.text = ""
+        tvDecription.text = ""
+        tvTitleFullScreen.text = ""
+        recyclerViewEpisode.visibility = View.GONE
+        recyclerViewMovie.visibility = View.GONE
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        updateFullscreenState()
+        Log.d("hoho", "UI reset")
+
+        // Tải dữ liệu phim mới
+        viewModel.fetchFilmDetail(filmId, "")
+        Log.d("hoho", "Fetching film detail for ID: $filmId")
+    }
+
     @SuppressLint("SetTextI18n")
     private fun setupViewModel() {
         viewModel = ViewModelProvider(this)[MovieViewModel::class.java]
@@ -483,77 +545,18 @@ class DetailActivity : AppCompatActivity() {
 
         relatedFilmAdapter = RelatedFilmAdapter()
         relatedFilmAdapter.onItemClick = { film ->
-            currentFilmId = film.id
+//            currentFilmId = film.id
             Log.d("hoho", "Related film selected: ${film.name}, id: ${film.id}")
-            viewModel.fetchFilmDetail(film.id, "")
-            setupLoad(currentVideoLink, film)
+//            viewModel.fetchFilmDetail(film.id, "")
+            updateFilm(film.id)
         }
 
         filmFullscreenAdapter = FilmFullscreenAdapter().apply {
             onItemClick = { film ->
-                currentFilmId = film.id
+//                currentFilmId = film.id
                 Log.d("hoho", "Fullscreen film selected: ${film.name}, id: ${film.id}")
-                viewModel.fetchFilmDetail(film.id, "")
-            }
-        }
-    }
-
-    private fun setupLoad(currentVideoLink: String, film: Film) {
-        playEpisode(currentVideoLink, 0L, null)
-        tvNameFilm.text = film.name
-        val fullText = film.description
-        val shortText = if (fullText.length > 200) fullText.substring(0, 200) + "..." else fullText
-        setTextWithReadMore(tvDecription, shortText, fullText)
-
-        tvLuotXem.text = "${film.viewNumber / 1000}k views"
-        tvTitleFullScreen.text = film.name
-        currentMovieTitle = film.name
-        currentMovieImage = film.avatar ?: ""
-
-        // Get episodes and sort them by episode number
-        val episodes = film.subVideoList ?: emptyList()
-        val sortedEpisodes =
-            episodes.sortedBy { it.episode.toString().toIntOrNull() ?: Int.MAX_VALUE }
-        Log.d(
-            "hoho",
-            "Episodes before sort: ${episodes.map { "episode=${it.episode}, link=${it.link}" }}"
-        )
-        Log.d(
-            "hoho",
-            "Episodes after sort: ${sortedEpisodes.map { "episode=${it.episode}, link=${it.link}" }}"
-        )
-
-        // Update adapters with sorted list
-        episodeAdapter.submitList(sortedEpisodes)
-        episodeFullScreenAdapter.submitList(sortedEpisodes)
-
-        if (sortedEpisodes.isNotEmpty()) {
-            recyclerViewEpisode.visibility = View.VISIBLE
-            recyclerViewMovie.visibility = View.GONE
-            isPhimBo = true
-
-            val firstEpisode = sortedEpisodes.firstOrNull()
-            // No history, start with first episode
-            currentEpisodeNumber = firstEpisode?.episode.toString() ?: ""
-            recyclerViewEpisode.scrollToPosition(0)
-            adapter.notifyEpisodeSelected(0)
-            playEpisode(currentVideoLink, 0L, currentEpisodeNumber)
-        } else {
-            recyclerViewEpisode.visibility = View.GONE
-            recyclerViewMovie.visibility = View.VISIBLE
-            isPhimBo = false
-            // For non-series movies, use the link from API
-            val videoLink = film.link ?: ""
-            if (videoLink.isNotEmpty()) {
-                Log.d("hoho", "Playing initial video: $videoLink")
-                playEpisode(videoLink, playbackPosition, null)
-            } else {
-                Log.e("hoho", "No valid video link available")
-                Toast.makeText(
-                    this@DetailActivity,
-                    "No video available for this film",
-                    Toast.LENGTH_SHORT
-                ).show()
+//                viewModel.fetchFilmDetail(film.id, "")
+                updateFilm(film.id)
             }
         }
     }
