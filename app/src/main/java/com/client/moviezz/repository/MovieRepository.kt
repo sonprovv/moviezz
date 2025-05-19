@@ -8,6 +8,7 @@ class MovieRepository {
     private val apiService = RetrofitClient.apiService
     private val wsToken = util.WSTOKEN
     private val secApi = util.SEC_API
+    private val uuid = util.UUID
 
     suspend fun getMovieHome(msisdn: String) =
         apiService.getListMovie(msisdn = msisdn, wsToken = wsToken, secApi = secApi)
@@ -18,9 +19,6 @@ class MovieRepository {
     suspend fun getFilmOfCategory(
         categoryId: Int,
         msisdn: String,
-        language: String,
-        page: Int,
-        size: Int
     ) = apiService.getFilmsByCategory(
         categoryId = categoryId,
         msisdn = msisdn,
@@ -30,7 +28,7 @@ class MovieRepository {
         wsToken = wsToken
     )
 
-    suspend fun getFilmDetail(filmId: Int, msisdn: String) = apiService.getFilmDetail(
+    suspend fun getFilmDetail(filmId: Int, msisdn: String, secApi: String) = apiService.getFilmDetail(
         filmId = filmId,
         msisdn = msisdn,
         wsToken = wsToken,
@@ -40,9 +38,7 @@ class MovieRepository {
     suspend fun getRelatedFilms(
         categoryId: Int,
         msisdn: String,
-        page: Int,
-        size: Int,
-        language: String
+        secApi: String
     ) = apiService.getRelatedFilms(
         categoryId = categoryId,
         msisdn = msisdn,
@@ -53,7 +49,7 @@ class MovieRepository {
         secApi = secApi
     )
 
-    suspend fun getMovieSearch(keySearch: String, msisdn: String, page: Int, size: Int) =
+    suspend fun getMovieSearch(keySearch: String, msisdn: String) =
         apiService.searchFilms(
             keySearch = keySearch,
             msisdn = msisdn,
@@ -61,4 +57,33 @@ class MovieRepository {
             size = 100,
             wsToken = wsToken
         )
+
+    suspend fun getOTP(
+        username: String
+    ) =
+        apiService.genOtp(
+            countryCode = "67",
+            osVersion = "",
+            device = "",
+            version = "",
+            platform = "Android",
+            revision = "",
+            username = username,
+            uuid = uuid,
+            secApi = secApi,
+            languageCode = "en"
+        )
+
+    suspend fun getToken(msisdn: String, otp: String, uuId: String) =
+        apiService.getToken(
+            msisdn = msisdn,
+            otp = otp,
+            uuid = uuId,
+            secApi = secApi,
+            languageCode = "en",
+            countryCode = "67"
+        )
+
+
+
 }

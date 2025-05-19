@@ -1,4 +1,5 @@
 package com.client.moviezz.adapters
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +14,8 @@ import com.client.moviezz.R
 import com.client.moviezz.models.PhotoViewPager
 
 class ViewPagerAdapter(
-    private var photoList: List<PhotoViewPager>
+    private var photoList: List<PhotoViewPager>,
+    private val onItemClick: (PhotoViewPager) -> Unit = {}
 ) : RecyclerView.Adapter<ViewPagerAdapter.PhotoViewHolder>() {
 
     class PhotoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -40,9 +42,15 @@ class ViewPagerAdapter(
                 )
                 .into(holder.imageView)
         }
+        
+        // Add click listener to the item view
+        holder.itemView.setOnClickListener {
+            onItemClick(photo)
+        }
     }
     override fun getItemCount(): Int = photoList.size
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateData(listPhoto: List<PhotoViewPager>) {
         photoList = listPhoto
         notifyDataSetChanged()

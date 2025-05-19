@@ -1,5 +1,6 @@
 package com.client.moviezz.adapters
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
@@ -7,7 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat.startActivity
+import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -17,8 +20,10 @@ import com.client.moviezz.R
 import com.client.moviezz.models.Category
 import com.client.moviezz.views.DetailActivity
 
+@Suppress("DEPRECATION")
 class CategoryAdapter : RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder>() {
     private var categoryList: List<Category> = emptyList()
+    @SuppressLint("NotifyDataSetChanged")
     fun setData(list: List<Category>) {
         categoryList = list
         notifyDataSetChanged()
@@ -38,8 +43,9 @@ class CategoryAdapter : RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder>
         return CategoryViewHolder(view)
     }
 
+    @OptIn(UnstableApi::class)
     override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {
-        var category = categoryList[position]
+        val category = categoryList[position]
         holder.tvType.text = category.name
 
         // Check if the category has films
@@ -56,7 +62,7 @@ class CategoryAdapter : RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder>
             }
 
             // Set up the film adapter with the category films
-            val filmAdapter = FilmOfCategoryAdapter(category.id).apply {
+            val filmAdapter = FilmOfCategoryAdapter().apply {
                 category.films?.let { setData(it) }
             }
             holder.recyclerView.apply {
@@ -66,8 +72,9 @@ class CategoryAdapter : RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder>
             }
         }
         holder.ivMainPhoto.setOnClickListener{
-            var intent = Intent(holder.itemView.context, DetailActivity::class.java)
+            val intent = Intent(holder.itemView.context, DetailActivity::class.java)
             intent.putExtra("film_id", mainFilm?.id)
+            intent.putExtra("film_avatar", mainFilm?.avatar)
             startActivity(holder.itemView.context, intent, null)
         }
     }

@@ -1,5 +1,6 @@
 package com.client.moviezz.views
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +12,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.client.moviezz.R
 import com.client.moviezz.adapters.RelatedFilmAdapter
-import com.client.moviezz.models.Film
 import com.client.moviezz.viewmodel.MovieViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -38,7 +38,12 @@ class RelatedFilmFragment : Fragment() {
 
         viewModel = ViewModelProvider(requireActivity())[MovieViewModel::class.java]
 
-        // Gọi API khi có filmDetail
+        // ✅ Nếu filmDetail đã có, gọi fetch luôn
+        viewModel.filmDetail.value?.let { film ->
+            viewModel.fetchRelatedFilms(film.categoryId, "")
+        }
+
+        // ✅ Theo dõi nếu filmDetail thay đổi (chỉ gọi lại nếu cần)
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.filmDetail.collectLatest { filmDetail ->
                 filmDetail?.let {
@@ -47,7 +52,7 @@ class RelatedFilmFragment : Fragment() {
             }
         }
 
-        // Lắng nghe dữ liệu phim liên quan
+        // ✅ Lắng nghe danh sách phim liên quan
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.relatedFilms.collectLatest { relatedList ->
                 val currentFilmId = viewModel.filmDetail.value?.id
@@ -56,4 +61,12 @@ class RelatedFilmFragment : Fragment() {
             }
         }
     }
+    @SuppressLint("NotifyDataSetChanged")
+    override fun onResume() {
+        super.onResume()
+        // Ép adapter vẽ lại khi fragment thực sự hiện
+        recyclerView.adapter?.notifyDataSetChanged()
+    }
+
+
 }

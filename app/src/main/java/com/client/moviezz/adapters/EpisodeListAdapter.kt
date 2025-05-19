@@ -1,5 +1,6 @@
 package com.client.moviezz.adapters
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -9,12 +10,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.client.moviezz.R
 import com.client.moviezz.models.SubVideo
 
+@Suppress("DEPRECATION")
 class EpisodeListAdapter : RecyclerView.Adapter<EpisodeListAdapter.EpisodeViewHolder>() {
     private var episodeList: List<SubVideo> = emptyList()
     private var selectedPosition = 0 // Mặc định chọn position 0
 
     var onItemClick: ((SubVideo) -> Unit)? = null
 
+    @SuppressLint("NotifyDataSetChanged")
     inner class EpisodeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val episodeNumber: TextView = itemView.findViewById(R.id.tv_tap)
         init {
@@ -40,6 +43,7 @@ class EpisodeListAdapter : RecyclerView.Adapter<EpisodeListAdapter.EpisodeViewHo
         return EpisodeViewHolder(view)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: EpisodeViewHolder, position: Int) {
         val episode = episodeList[position]
         holder.episodeNumber.text = episode.episode.toString()
@@ -56,9 +60,28 @@ class EpisodeListAdapter : RecyclerView.Adapter<EpisodeListAdapter.EpisodeViewHo
 
     override fun getItemCount(): Int = episodeList.size
 
+    @SuppressLint("NotifyDataSetChanged")
     fun submitList(list: List<SubVideo>) {
         episodeList = list.sortedBy { it.episode }
-        selectedPosition = if (list.isNotEmpty()) 0 else RecyclerView.NO_POSITION // Chọn position 0 nếu danh sách không rỗng
+//        selectedPosition = if (list.isNotEmpty()) 0 else RecyclerView.NO_POSITION // Chọn position 0 nếu danh sách không rỗng
         notifyDataSetChanged()
+//        val currentSelected = episodeList.getOrNull(selectedPosition)
+//        if (currentSelected != null) {
+//            setSelectedEpisode(currentSelected)
+//        }
     }
+    fun setSelectedEpisode(episode: SubVideo) {
+        val newPosition = episodeList.indexOf(episode)
+        Log.e("hoho", "AAAA newPosition: $newPosition" + "position: $selectedPosition")
+        if (newPosition != -1 && newPosition != selectedPosition) {
+
+            val previous = selectedPosition
+            selectedPosition = newPosition
+            notifyItemChanged(previous)
+            notifyItemChanged(newPosition)
+
+        }
+        Log.e("hoho", "AAAA episode: $episode" + "position: $selectedPosition")
+    }
+
 }

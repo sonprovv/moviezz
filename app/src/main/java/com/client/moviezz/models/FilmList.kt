@@ -41,7 +41,7 @@ data class Film(
     val autoOn: Int,
     val schedule: String? = null,
     val episodesTotal: Int,
-    val subVideoList: Any? = null,
+    val subVideoList: List<SubVideo>? = null,
     val subTitleList: Any? = null,
     val redirectLink: String
 )

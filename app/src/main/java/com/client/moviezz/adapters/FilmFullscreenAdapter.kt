@@ -22,35 +22,22 @@ class FilmFullscreenAdapter : ListAdapter<Film, FilmFullscreenAdapter.RelatedFil
     var onItemClick: ((Film) -> Unit)? = null
 
     class RelatedFilmViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ivPhotoFilm: ImageView = itemView.findViewById(R.id.iv_photo_film)
-        val tvNameFilm: TextView = itemView.findViewById(R.id.tv_name_film)
-        val tvTotalTime: TextView = itemView.findViewById(R.id.tv_total_time)
+        private val ivPhotoFilm: ImageView = itemView.findViewById(R.id.iv_photo_film_player)
+        private val tvNameFilm: TextView = itemView.findViewById(R.id.tv_name_film)
 
         fun bind(film: Film) {
             // Hiển thị tên phim
             tvNameFilm.text = film.name
-
-            // Hiển thị thời lượng (định dạng từ duration dạng giây sang mm:ss)
-            tvTotalTime.text = formatDuration(film.duration ?: 0)
-
             // Tải ảnh avatar bằng Glide
             Glide.with(itemView.context)
                 .load(film.avatar)
-                .placeholder(R.drawable.ic_launcher_background)
                 .into(ivPhotoFilm)
-        }
-
-        private fun formatDuration(durationSeconds: Int): String {
-            if (durationSeconds <= 0) return "00:00"
-            val minutes = durationSeconds / 60
-            val seconds = durationSeconds % 60
-            return String.format("%02d:%02d", minutes, seconds)
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RelatedFilmViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_related_film_of_category, parent, false)
+            .inflate(R.layout.item_related_film_fullscreen, parent, false)
         return RelatedFilmViewHolder(view)
     }
 
@@ -61,7 +48,7 @@ class FilmFullscreenAdapter : ListAdapter<Film, FilmFullscreenAdapter.RelatedFil
 
         // Xử lý click item
         holder.itemView.setOnClickListener {
-            onItemClick?.invoke(film)
+//            onItemClick?.invoke(film)
             // Chuyển đến DetailActivity với film_id
             val intent = Intent(holder.itemView.context, DetailActivity::class.java)
             intent.putExtra("film_id", film.id)

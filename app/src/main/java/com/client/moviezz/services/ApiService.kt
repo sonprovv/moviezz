@@ -1,14 +1,15 @@
 package com.client.moviezz.services
-import com.client.moviezz.models.Category
 import com.client.moviezz.models.CategoryList
-import com.client.moviezz.models.Film
 import com.client.moviezz.models.FilmDetailList
 import com.client.moviezz.models.FilmList
+import com.client.moviezz.models.GetOTPResponse
+import com.client.moviezz.models.GetTokenResponse
 import com.client.moviezz.models.MovieHome
 import com.client.moviezz.models.MovieListSearch
 import com.client.moviezz.models.RelatedFilmList
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 interface ApiService {
@@ -63,4 +64,28 @@ interface ApiService {
         @Header("wsToken") wsToken: String,
         @Header("sec-api") secApi: String
     ): RelatedFilmList
+
+    @POST("genotp/v31")
+    suspend fun genOtp(
+        @Query("countryCode") countryCode: String,
+        @Query("os_version") osVersion: String,
+        @Query("device") device: String,
+        @Query("version") version: String,
+        @Query("platform") platform: String,
+        @Query("revision") revision: String,
+        @Query("username") username: String,
+        @Header("uuid") uuid: String,
+        @Header("sec-api") secApi: String,
+        @Header("languageCode") languageCode: String,
+    ): GetOTPResponse
+
+    @POST("genotp/get/token")
+    suspend fun getToken(
+        @Query("msisdn") msisdn: String,
+        @Query("otp") otp: String,
+        @Header("uuid") uuid: String,
+        @Header("sec-api") secApi: String,
+        @Header("languageCode") languageCode: String,
+        @Header("countryCode") countryCode: String,
+    ): GetTokenResponse
 }

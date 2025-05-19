@@ -7,7 +7,7 @@
     tools:context=".views.DanhSachTapFragment">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_danh_sach_tap"
+        android:id="@+id/recycler_view_danh_sach_tap"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"

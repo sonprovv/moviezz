@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.client.moviezz.R
 import com.client.moviezz.adapters.MovieSearchAdapter
 import com.client.moviezz.viewmodel.MovieViewModel
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -29,6 +30,7 @@ class SearchActivity : AppCompatActivity() {
 
     private val searchQuery = MutableStateFlow("")
 
+    @OptIn(FlowPreview::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

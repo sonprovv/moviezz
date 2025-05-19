@@ -30,8 +30,14 @@
                     android:layout_alignParentBottom="true"
                     android:layout_width="match_parent"
                     android:layout_height="4dp"
-                    android:background="@color/chu_dao"
-                    />
+                    android:progressDrawable="@drawable/seekbar_progress"
+                    android:thumb="@null"
+                    android:background="@android:color/transparent"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginEnd="0dp"
+                    android:thumbOffset="0dp"/>
             </RelativeLayout>
         </androidx.cardview.widget.CardView>
 

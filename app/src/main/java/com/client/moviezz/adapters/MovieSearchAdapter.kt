@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -31,6 +33,7 @@ class MovieSearchAdapter : RecyclerView.Adapter<MovieSearchAdapter.MovieSearchVi
         return MovieSearchViewHolder(view)
     }
 
+    @OptIn(UnstableApi::class)
     override fun onBindViewHolder(holder: MovieSearchViewHolder, position: Int) {
         val movie = movieList[position]
         holder.tvName.text = movie.name
