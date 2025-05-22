@@ -48,6 +48,7 @@ import com.client.moviezz.adapters.EpisodeFullScreenAdapter
 import com.client.moviezz.adapters.EpisodeListAdapter
 import com.client.moviezz.adapters.FilmFullscreenAdapter
 import com.client.moviezz.adapters.RelatedFilmAdapter
+import com.client.moviezz.databinding.ActivityDetailBinding
 import com.client.moviezz.db.room.AppDatabase
 import com.client.moviezz.db.room.HistoryMovie
 import com.client.moviezz.models.Film
@@ -67,43 +68,17 @@ import kotlin.math.abs
 @Suppress("DEPRECATION")
 @UnstableApi
 class DetailActivity : AppCompatActivity() {
-    private lateinit var topControls: LinearLayout
-    private lateinit var viewPager2: ViewPager2
-    private lateinit var adapter: DetailAdapter
-    private lateinit var tabLayout: TabLayout
+    private lateinit var binding: ActivityDetailBinding
     private lateinit var viewModel: MovieViewModel
-    private lateinit var ivBack: ImageView
-    private lateinit var ibBack: ImageButton
-    private lateinit var tvTitleFullScreen: TextView
-
-    //    private lateinit var ibLock: ImageButton
-    private lateinit var ibRewind: ImageButton
-    private lateinit var ibForward: ImageButton
-    private lateinit var ibFullScreen: ImageButton
-    private lateinit var ibPlay: ImageButton
-
-    //    private lateinit var ibPrevious: ImageButton
-//    private lateinit var ibNext: ImageButton
-    private lateinit var tvCurrentTime: TextView
-    private lateinit var tvTotalTime: TextView
-    private lateinit var tvNameFilm: TextView
-    private lateinit var tvLuotXem: TextView
-    private lateinit var tvDecription: TextView
-    private lateinit var playerView: PlayerView
-    private lateinit var playerContainer: ConstraintLayout
-    private lateinit var llInfo: LinearLayout
-    private lateinit var timeBar: DefaultTimeBar
-    private lateinit var nestedScrollView: NestedScrollView
-    private lateinit var recyclerViewEpisode: RecyclerView
-    private lateinit var recyclerViewMovie: RecyclerView
-    private lateinit var bottomSheetBehavior: BottomSheetBehavior<RelativeLayout>
-    private lateinit var gestureDetector: GestureDetector
-    private lateinit var episodeAdapter: EpisodeListAdapter
-    private lateinit var relatedFilmAdapter: RelatedFilmAdapter
-    private lateinit var filmFullscreenAdapter: FilmFullscreenAdapter
-    private lateinit var episodeFullScreenAdapter: EpisodeFullScreenAdapter
     private lateinit var historyRepository: WatchHistoryRepository
     private lateinit var detailViewModel: MovieViewModel.DetailViewModel
+    private lateinit var adapter: DetailAdapter
+    private lateinit var episodeAdapter: EpisodeListAdapter
+    private lateinit var episodeFullScreenAdapter: EpisodeFullScreenAdapter
+    private lateinit var relatedFilmAdapter: RelatedFilmAdapter
+    private lateinit var filmFullscreenAdapter: FilmFullscreenAdapter
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<RelativeLayout>
+    private lateinit var gestureDetector: GestureDetector
 
     private var currentMovieTitle = ""
     private var currentMovieImage = ""
@@ -141,7 +116,9 @@ class DetailActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_detail)
+        binding = ActivityDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = Color.TRANSPARENT
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -159,7 +136,7 @@ class DetailActivity : AppCompatActivity() {
         avatar = intent.getStringExtra("film_avatar") ?: ""
         currentFilmId = filmId
         Log.d("hoho", "Received film_id: $filmId")
-        anhXa()
+        
         if (savedInstanceState != null) {
             playbackPosition = savedInstanceState.getLong("playback_position", playbackPosition)
             currentMediaItemIndex = savedInstanceState.getInt("current_media_item", 0)
@@ -176,6 +153,8 @@ class DetailActivity : AppCompatActivity() {
                 "Restored state: position=$playbackPosition, fullscreen=$isFullscreen, filmId=$currentFilmId, videoLink=$currentVideoLink, episode=$currentEpisodeNumber"
             )
         }
+        
+        originalContainerHeight = resources.getDimensionPixelSize(R.dimen.player_height)
         setupGestureDetector()
         initializePlayer()
         initControllerViews()
@@ -189,95 +168,32 @@ class DetailActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerViews() {
-        recyclerViewEpisode.layoutManager =
+        binding.bottomSheet.recyclerViewPhimBo.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        recyclerViewEpisode.adapter = episodeFullScreenAdapter
-        recyclerViewEpisode.setHasFixedSize(true)
-        recyclerViewEpisode.isNestedScrollingEnabled = true
-        recyclerViewEpisode.setItemViewCacheSize(20)
-        recyclerViewEpisode.setHasFixedSize(true)
-        recyclerViewEpisode.setItemAnimator(null)
+        binding.bottomSheet.recyclerViewPhimBo.adapter = episodeFullScreenAdapter
+        binding.bottomSheet.recyclerViewPhimBo.setHasFixedSize(true)
+        binding.bottomSheet.recyclerViewPhimBo.isNestedScrollingEnabled = true
+        binding.bottomSheet.recyclerViewPhimBo.setItemViewCacheSize(20)
+        binding.bottomSheet.recyclerViewPhimBo.setHasFixedSize(true)
+        binding.bottomSheet.recyclerViewPhimBo.setItemAnimator(null)
 
-        recyclerViewMovie.layoutManager =
+        binding.bottomSheet.recyclerViewPhimLe.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        recyclerViewMovie.adapter = filmFullscreenAdapter
-        recyclerViewMovie.setHasFixedSize(true)
-        recyclerViewMovie.isNestedScrollingEnabled = true
-        recyclerViewMovie.setItemViewCacheSize(20)
-        recyclerViewMovie.setHasFixedSize(true)
-        recyclerViewMovie.setItemAnimator(null)
-        recyclerViewMovie.post {
+        binding.bottomSheet.recyclerViewPhimLe.adapter = filmFullscreenAdapter
+        binding.bottomSheet.recyclerViewPhimLe.setHasFixedSize(true)
+        binding.bottomSheet.recyclerViewPhimLe.isNestedScrollingEnabled = true
+        binding.bottomSheet.recyclerViewPhimLe.setItemViewCacheSize(20)
+        binding.bottomSheet.recyclerViewPhimLe.setHasFixedSize(true)
+        binding.bottomSheet.recyclerViewPhimLe.setItemAnimator(null)
+        binding.bottomSheet.recyclerViewPhimLe.post {
             Log.d(
                 "hoho",
-                "Initial recyclerViewMovie setup: isVisible=${recyclerViewMovie.isVisible}, " +
-                        "height=${recyclerViewMovie.height}, itemCount=${filmFullscreenAdapter.itemCount}"
+                "Initial recyclerViewMovie setup: isVisible=${binding.bottomSheet.recyclerViewPhimLe.isVisible}, " +
+                        "height=${binding.bottomSheet.recyclerViewPhimLe.height}, itemCount=${filmFullscreenAdapter.itemCount}"
             )
         }
     }
 
-    // Hàm mới để cập nhật phim mới mà không tạo lại activity
-    private fun updateFilm(filmId: Int) {
-        Log.d("hoho", "Updating film with ID: $filmId")
-
-        // Lưu lịch sử của phim hiện tại trước khi chuyển
-        player?.let { currentPlayer ->
-            val currentHistory = HistoryMovie(
-                movieId = currentFilmId.toString(),
-                videoLink = currentVideoLink,
-                movieTitle = currentMovieTitle,
-                movieImage = currentMovieImage,
-                lastPosition = currentPlayer.currentPosition,
-                duration = currentPlayer.duration,
-                lastWatched = System.currentTimeMillis(),
-                episodeNumber = currentEpisodeNumber
-            )
-            Log.d("hoho", "Saving history before switching film: $currentHistory")
-            lifecycleScope.launch {
-                detailViewModel.insertOrUpdate(currentHistory)
-            }
-        }
-
-        // Reset trạng thái
-        currentFilmId = filmId
-        currentVideoLink = ""
-        currentEpisodeNumber = ""
-        playbackPosition = 0L
-        isPhimBo = false
-        isFullscreen = false
-        currentMovieTitle = ""
-        currentMovieImage = ""
-
-        // Reset trình phát
-        player?.let {
-            it.stop()
-            it.clearMediaItems()
-            Log.d("hoho", "Player reset for new film")
-        } ?: Log.w("hoho", "Player is null during reset")
-
-        // Reset adapters
-        episodeAdapter.submitList(emptyList())
-        episodeFullScreenAdapter.submitList(emptyList())
-        relatedFilmAdapter.submitList(emptyList())
-        filmFullscreenAdapter.submitList(emptyList())
-        Log.d("hoho", "Adapters reset")
-
-        // Reset giao diện
-        tvNameFilm.text = ""
-        tvLuotXem.text = ""
-        tvDecription.text = ""
-        tvTitleFullScreen.text = ""
-        recyclerViewEpisode.visibility = View.GONE
-        recyclerViewMovie.visibility = View.GONE
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-        updateFullscreenState()
-        Log.d("hoho", "UI reset")
-
-        // Tải dữ liệu phim mới
-        viewModel.fetchFilmDetail(filmId, "")
-        Log.d("hoho", "Fetching film detail for ID: $filmId")
-    }
-
-    @SuppressLint("SetTextI18n")
     private fun setupViewModel() {
         viewModel = ViewModelProvider(this)[MovieViewModel::class.java]
         historyRepository = WatchHistoryRepository(AppDatabase.invoke(this))
@@ -287,14 +203,14 @@ class DetailActivity : AppCompatActivity() {
             lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 val filmDetail = viewModel.filmDetail.filterNotNull().first()
                 Log.d("hoho", "Film detail received: $filmDetail")
-                tvNameFilm.text = filmDetail.name
+                binding.tvNameFilm.text = filmDetail.name
                 val fullText = filmDetail.description
                 val shortText =
                     if (fullText.length > 200) fullText.substring(0, 200) + "..." else fullText
-                setTextWithReadMore(tvDecription, shortText, fullText)
+                setTextWithReadMore(binding.tvDecription, shortText, fullText)
 
-                tvLuotXem.text = "${filmDetail.viewNumber / 1000}k views"
-                tvTitleFullScreen.text = filmDetail.name
+                binding.tvLuotXem.text = "${filmDetail.viewNumber / 1000}k views"
+                binding.tvTitleFullScreen.text = filmDetail.name
                 currentMovieTitle = filmDetail.name
                 currentMovieImage = filmDetail.avatar ?: ""
 
@@ -316,8 +232,8 @@ class DetailActivity : AppCompatActivity() {
                 episodeFullScreenAdapter.submitList(sortedEpisodes)
 
                 if (sortedEpisodes.isNotEmpty()) {
-                    recyclerViewEpisode.visibility = View.VISIBLE
-                    recyclerViewMovie.visibility = View.GONE
+                    binding.bottomSheet.recyclerViewPhimBo.visibility = View.VISIBLE
+                    binding.bottomSheet.recyclerViewPhimLe.visibility = View.GONE
                     isPhimBo = true
 
                     val firstEpisode = sortedEpisodes.firstOrNull()
@@ -343,7 +259,7 @@ class DetailActivity : AppCompatActivity() {
                             val selectedEpisode = sortedEpisodes[episodeIndex]
                             episodeFullScreenAdapter.setSelectedEpisode(selectedEpisode)
                             episodeAdapter.setSelectedEpisode(selectedEpisode)
-                            recyclerViewEpisode.scrollToPosition(episodeIndex)
+                            binding.bottomSheet.recyclerViewPhimBo.scrollToPosition(episodeIndex)
                             adapter.notifyEpisodeSelected(episodeIndex)
                             playEpisode(currentVideoLink, playbackPosition, currentEpisodeNumber)
                         } else {
@@ -356,7 +272,7 @@ class DetailActivity : AppCompatActivity() {
                             currentEpisodeNumber = firstEpisode?.episode.toString() ?: ""
                             firstEpisode?.let { episodeFullScreenAdapter.setSelectedEpisode(it) }
                             firstEpisode?.let { episodeAdapter.setSelectedEpisode(it) }
-                            recyclerViewEpisode.scrollToPosition(0)
+                            binding.bottomSheet.recyclerViewPhimBo.scrollToPosition(0)
                             adapter.notifyEpisodeSelected(0)
                             playEpisode(currentVideoLink, 0L, currentEpisodeNumber)
                         }
@@ -367,13 +283,13 @@ class DetailActivity : AppCompatActivity() {
                         currentEpisodeNumber = firstEpisode?.episode.toString() ?: ""
                         firstEpisode?.let { episodeFullScreenAdapter.setSelectedEpisode(it) }
                         firstEpisode?.let { episodeAdapter.setSelectedEpisode(it) }
-                        recyclerViewEpisode.scrollToPosition(0)
+                        binding.bottomSheet.recyclerViewPhimBo.scrollToPosition(0)
                         adapter.notifyEpisodeSelected(0)
                         playEpisode(currentVideoLink, 0L, currentEpisodeNumber)
                     }
                 } else {
-                    recyclerViewEpisode.visibility = View.GONE
-                    recyclerViewMovie.visibility = View.VISIBLE
+                    binding.bottomSheet.recyclerViewPhimBo.visibility = View.GONE
+                    binding.bottomSheet.recyclerViewPhimLe.visibility = View.VISIBLE
                     isPhimBo = false
                     // For non-series movies, use the link from API
                     val videoLink = filmDetail.link ?: ""
@@ -407,7 +323,7 @@ class DetailActivity : AppCompatActivity() {
                     filmFullscreenAdapter.submitList(relatedFilms)
                     Log.d(
                         "hoho",
-                        "Related films updated: isVisible=${recyclerViewMovie.isVisible}, " +
+                        "Related films updated: isVisible=${binding.bottomSheet.recyclerViewPhimLe.isVisible}, " +
                                 "itemCount=${filmFullscreenAdapter.itemCount}"
                     )
                 }
@@ -431,7 +347,7 @@ class DetailActivity : AppCompatActivity() {
                 if (episodeIndex >= 0) {
                     episodeFullScreenAdapter.setSelectedEpisode(episodes[episodeIndex])
                     episodeAdapter.setSelectedEpisode(episodes[episodeIndex])
-                    recyclerViewEpisode.scrollToPosition(episodeIndex)
+                    binding.bottomSheet.recyclerViewPhimBo.scrollToPosition(episodeIndex)
                     adapter.notifyEpisodeSelected(episodeIndex)
                     val history = detailViewModel.getByMovieIdAndLink(
                         currentFilmId.toString(),
@@ -450,9 +366,9 @@ class DetailActivity : AppCompatActivity() {
             }
         }
 
-        viewPager2.adapter = adapter
-        viewPager2.offscreenPageLimit = 2
-        TabLayoutMediator(tabLayout, viewPager2) { tab, position ->
+        binding.viewPager.adapter = adapter
+        binding.viewPager.offscreenPageLimit = 2
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             when (position) {
                 0 -> tab.text = "List of episodes"
                 1 -> tab.text = "Suggestions for you"
@@ -484,7 +400,7 @@ class DetailActivity : AppCompatActivity() {
                     Log.d("hoho", "Updating adapters with episode at index: $episodeIndex")
                     episodeFullScreenAdapter.setSelectedEpisode(episodes[episodeIndex])
                     episodeAdapter.setSelectedEpisode(episodes[episodeIndex])
-                    recyclerViewEpisode.scrollToPosition(episodeIndex)
+                    binding.bottomSheet.recyclerViewPhimBo.scrollToPosition(episodeIndex)
                     adapter.notifyEpisodeSelected(episodeIndex)
 
                     // Get history and play episode
@@ -525,7 +441,7 @@ class DetailActivity : AppCompatActivity() {
                     Log.d("hoho", "Updating adapters with episode at index: $episodeIndex")
                     episodeFullScreenAdapter.setSelectedEpisode(episodes[episodeIndex])
                     episodeAdapter.setSelectedEpisode(episodes[episodeIndex])
-                    recyclerViewEpisode.scrollToPosition(episodeIndex)
+                    binding.bottomSheet.recyclerViewPhimBo.scrollToPosition(episodeIndex)
                     adapter.notifyEpisodeSelected(episodeIndex)
 
                     // Get history and play episode
@@ -545,23 +461,18 @@ class DetailActivity : AppCompatActivity() {
 
         relatedFilmAdapter = RelatedFilmAdapter()
         relatedFilmAdapter.onItemClick = { film ->
-//            currentFilmId = film.id
             Log.d("hoho", "Related film selected: ${film.name}, id: ${film.id}")
-//            viewModel.fetchFilmDetail(film.id, "")
             updateFilm(film.id)
         }
 
         filmFullscreenAdapter = FilmFullscreenAdapter().apply {
             onItemClick = { film ->
-//                currentFilmId = film.id
                 Log.d("hoho", "Fullscreen film selected: ${film.name}, id: ${film.id}")
-//                viewModel.fetchFilmDetail(film.id, "")
                 updateFilm(film.id)
             }
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private fun setupGestureDetector() {
         gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onFling(
@@ -591,22 +502,21 @@ class DetailActivity : AppCompatActivity() {
             }
         })
 
-        playerView.setOnTouchListener { _, event ->
+        binding.playerView.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
             false
         }
     }
 
     private fun setupBottomSheet() {
-        val bottomSheet = findViewById<RelativeLayout>(R.id.bottom_sheet)
-        recyclerViewEpisode = bottomSheet.findViewById(R.id.recycler_view_phim_bo)
-        recyclerViewEpisode.layoutManager = LinearLayoutManager(this)
-        recyclerViewEpisode.adapter = episodeFullScreenAdapter
-        recyclerViewMovie = bottomSheet.findViewById(R.id.recycler_view_phim_le)
-        recyclerViewMovie.layoutManager = LinearLayoutManager(this)
-        recyclerViewMovie.adapter = relatedFilmAdapter
+        binding.bottomSheet.apply {
+            binding.bottomSheet.recyclerViewPhimBo.layoutManager = LinearLayoutManager(this@DetailActivity)
+            binding.bottomSheet.recyclerViewPhimBo.adapter = episodeFullScreenAdapter
+            binding.bottomSheet.recyclerViewPhimLe.layoutManager = LinearLayoutManager(this@DetailActivity)
+            binding.bottomSheet.recyclerViewPhimLe.adapter = relatedFilmAdapter
+        }
 
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
+        bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet.root)
         bottomSheetBehavior.isHideable = true
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         bottomSheetBehavior.isDraggable = true
@@ -615,48 +525,48 @@ class DetailActivity : AppCompatActivity() {
             BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 if (!isFullscreen) {
-                    TransitionManager.beginDelayedTransition(playerContainer)
+                    TransitionManager.beginDelayedTransition(binding.playerContainer)
                     when (newState) {
                         BottomSheetBehavior.STATE_EXPANDED -> {
-                            val params = playerContainer.layoutParams
+                            val params = binding.playerContainer.layoutParams
                             params.height = (resources.displayMetrics.heightPixels * 0.3).toInt()
-                            playerContainer.layoutParams = params
+                            binding.playerContainer.layoutParams = params
                             if (isPhimBo) {
-                                recyclerViewMovie.isNestedScrollingEnabled = false
-                                recyclerViewEpisode.isNestedScrollingEnabled = true
+                                binding.bottomSheet.recyclerViewPhimLe.isNestedScrollingEnabled = false
+                                binding.bottomSheet.recyclerViewPhimBo.isNestedScrollingEnabled = true
                             } else {
-                                recyclerViewMovie.isNestedScrollingEnabled = true
-                                recyclerViewEpisode.isNestedScrollingEnabled = false
+                                binding.bottomSheet.recyclerViewPhimLe.isNestedScrollingEnabled = true
+                                binding.bottomSheet.recyclerViewPhimBo.isNestedScrollingEnabled = false
                             }
                         }
 
                         BottomSheetBehavior.STATE_COLLAPSED -> {
-                            val params = playerContainer.layoutParams
+                            val params = binding.playerContainer.layoutParams
                             params.height = originalContainerHeight
-                            playerContainer.layoutParams = params
-                            playerView.showController()
+                            binding.playerContainer.layoutParams = params
+                            binding.playerView.showController()
                         }
 
                         BottomSheetBehavior.STATE_HIDDEN -> {
-                            val params = playerContainer.layoutParams
+                            val params = binding.playerContainer.layoutParams
                             params.height = originalContainerHeight
-                            playerContainer.layoutParams = params
-                            playerView.showController()
+                            binding.playerContainer.layoutParams = params
+                            binding.playerView.showController()
                         }
 
                         BottomSheetBehavior.STATE_DRAGGING -> {
-                            playerView.showController()
+                            binding.playerView.showController()
                         }
 
                         BottomSheetBehavior.STATE_HALF_EXPANDED -> {
-                            val params = playerContainer.layoutParams
+                            val params = binding.playerContainer.layoutParams
                             params.height = (originalContainerHeight * 0.7).toInt()
-                            playerContainer.layoutParams = params
-                            playerView.showController()
+                            binding.playerContainer.layoutParams = params
+                            binding.playerView.showController()
                         }
 
                         BottomSheetBehavior.STATE_SETTLING -> {
-                            playerView.showController()
+                            binding.playerView.showController()
                         }
                     }
                 }
@@ -664,7 +574,7 @@ class DetailActivity : AppCompatActivity() {
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 if (!isFullscreen) {
-                    val params = playerContainer.layoutParams
+                    val params = binding.playerContainer.layoutParams
                     val maxHeight = originalContainerHeight
                     val minHeight = (resources.displayMetrics.heightPixels * 0.3).toInt()
 
@@ -683,22 +593,22 @@ class DetailActivity : AppCompatActivity() {
                         minHeight + ((maxHeight - minHeight) * -easedOffset).toInt()
                     }
                     params.height = targetHeight
-                    playerContainer.layoutParams = params
+                    binding.playerContainer.layoutParams = params
                 }
             }
         })
 
         // Đảm bảo bottom sheet luôn nằm ở dưới cùng và danh sách phim nằm ở dưới
-        bottomSheet.post {
-            val layoutParams = bottomSheet.layoutParams as ViewGroup.MarginLayoutParams
+        binding.bottomSheet.root.post {
+            val layoutParams = binding.bottomSheet.root.layoutParams as ViewGroup.MarginLayoutParams
             layoutParams.bottomMargin = 0
-            bottomSheet.layoutParams = layoutParams
+            binding.bottomSheet.root.layoutParams = layoutParams
         }
     }
 
     private fun initializePlayer() {
         player = ExoPlayer.Builder(this).build()
-        playerView.player = player
+        binding.playerView.player = player
 
         player?.apply {
             seekTo(currentMediaItemIndex, playbackPosition)
@@ -723,10 +633,10 @@ class DetailActivity : AppCompatActivity() {
                     Player.STATE_READY -> {
                         Log.d("hoho", "Player state: READY")
                         updatePlayPauseButton()
-                        tvTotalTime.text = formatTime(player?.duration ?: 0)
-                        timeBar.setDuration(player?.duration ?: 0)
-                        timeBar.setPosition(player?.currentPosition ?: 0)
-                        timeBar.setBufferedPosition(player?.bufferedPosition ?: 0)
+                        binding.tvTotalTime.text = formatTime(player?.duration ?: 0)
+                        binding.dtbExoProgress.setDuration(player?.duration ?: 0)
+                        binding.dtbExoProgress.setPosition(player?.currentPosition ?: 0)
+                        binding.dtbExoProgress.setBufferedPosition(player?.bufferedPosition ?: 0)
                     }
 
                     Player.STATE_ENDED -> Log.d("hoho", "Player state: ENDED")
@@ -740,77 +650,64 @@ class DetailActivity : AppCompatActivity() {
     }
 
     private fun anhXa() {
-        viewPager2 = findViewById(R.id.view_pager)
-        tabLayout = findViewById(R.id.tab_layout)
-        ivBack = findViewById(R.id.iv_back)
-        tvNameFilm = findViewById(R.id.tv_name_film)
-        tvLuotXem = findViewById(R.id.tv_luot_xem)
-        tvDecription = findViewById(R.id.tv_decription)
-        playerView = findViewById(R.id.player_view)
-        playerContainer = findViewById(R.id.player_container)
-        llInfo = findViewById(R.id.ll_info)
-        originalContainerHeight = resources.getDimensionPixelSize(R.dimen.player_height)
-        nestedScrollView = findViewById(R.id.nested_scroll_view)
-
-        ivBack.setOnClickListener {
-            if (isFullscreen) {
-                toggleFullscreen()
-            } else {
-//                // Return to main screen by clearing the activity stack
-//                val intent = Intent(this, MainActivity::class.java)
-//                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-//                startActivity(intent)
-                finish()
-            }
-        }
+        binding.viewPager.findViewById<ViewPager2>(R.id.view_pager)
+        binding.tabLayout.findViewById<TabLayout>(R.id.tab_layout)
+        binding.ivBack.findViewById<ImageView>(R.id.iv_back)
+        binding.tvNameFilm.findViewById<TextView>(R.id.tv_name_film)
+        binding.tvLuotXem.findViewById<TextView>(R.id.tv_luot_xem)
+        binding.tvDecription.findViewById<TextView>(R.id.tv_decription)
+        binding.playerView.findViewById<PlayerView>(R.id.player_view)
+        binding.playerContainer.findViewById<ConstraintLayout>(R.id.player_container)
+        binding.llInfo.findViewById<LinearLayout>(R.id.ll_info)
+        binding.originalContainerHeight = resources.getDimensionPixelSize(R.dimen.player_height)
+        binding.nestedScrollView.findViewById<NestedScrollView>(R.id.nested_scroll_view)
     }
 
     @OptIn(UnstableApi::class)
     private fun updateFullscreenState() {
-        val bottomSheet = findViewById<RelativeLayout>(R.id.bottom_sheet)
         if (isFullscreen) {
             if (isPhimBo) {
-                recyclerViewEpisode.visibility = View.VISIBLE
-                recyclerViewMovie.visibility = View.GONE
+                binding.bottomSheet.recyclerViewPhimBo.visibility = View.VISIBLE
+                binding.bottomSheet.recyclerViewPhimLe.visibility = View.GONE
             } else {
-                recyclerViewEpisode.visibility = View.GONE
-                recyclerViewMovie.visibility = View.VISIBLE
+                binding.bottomSheet.recyclerViewPhimBo.visibility = View.GONE
+                binding.bottomSheet.recyclerViewPhimLe.visibility = View.VISIBLE
             }
-            bottomSheet.visibility = View.VISIBLE
-            tvNameFilm.visibility = View.GONE
-            tvLuotXem.visibility = View.GONE
-            tvDecription.visibility = View.GONE
-            llInfo.visibility = View.GONE
-            ivBack.visibility = View.GONE
-            tabLayout.visibility = View.GONE
-            viewPager2.visibility = View.GONE
+            binding.bottomSheet.visibility = View.VISIBLE
+            binding.tvNameFilm.visibility = View.GONE
+            binding.tvLuotXem.visibility = View.GONE
+            binding.tvDecription.visibility = View.GONE
+            binding.llInfo.visibility = View.GONE
+            binding.ivBack.visibility = View.GONE
+            binding.tabLayout.visibility = View.GONE
+            binding.viewPager.visibility = View.GONE
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-            val params = playerContainer.layoutParams
+            val params = binding.playerContainer.layoutParams
             params.height = ViewGroup.LayoutParams.MATCH_PARENT
-            playerContainer.layoutParams = params
-            topControls.visibility = View.VISIBLE
+            binding.playerContainer.layoutParams = params
+            binding.llTopControl.visibility = View.VISIBLE
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         } else {
-            tvNameFilm.visibility = View.VISIBLE
-            tvLuotXem.visibility = View.VISIBLE
-            tvDecription.visibility = View.VISIBLE
-            llInfo.visibility = View.VISIBLE
-            ivBack.visibility = View.VISIBLE
-            tabLayout.visibility = View.VISIBLE
-            viewPager2.visibility = View.VISIBLE
+            binding.tvNameFilm.visibility = View.VISIBLE
+            binding.tvLuotXem.visibility = View.VISIBLE
+            binding.tvDecription.visibility = View.VISIBLE
+            binding.llInfo.visibility = View.VISIBLE
+            binding.ivBack.visibility = View.VISIBLE
+            binding.tabLayout.visibility = View.VISIBLE
+            binding.viewPager.visibility = View.VISIBLE
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-            val params = playerContainer.layoutParams
+            val params = binding.playerContainer.layoutParams
             params.height = originalContainerHeight
-            playerContainer.layoutParams = params
-            topControls.visibility = View.GONE
+            binding.playerContainer.layoutParams = params
+            binding.llTopControl.visibility = View.GONE
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-            recyclerViewEpisode.visibility = View.GONE
-            recyclerViewMovie.visibility = View.GONE
-            bottomSheet.visibility = View.GONE
+            binding.bottomSheet.recyclerViewPhimBo.visibility = View.GONE
+            binding.bottomSheet.recyclerViewPhimLe.visibility = View.GONE
+            binding.bottomSheet.visibility = View.GONE
         }
-        playerView.showController()
+        binding.playerView.showController()
     }
 
     @OptIn(UnstableApi::class)
@@ -821,31 +718,17 @@ class DetailActivity : AppCompatActivity() {
 
     @OptIn(UnstableApi::class)
     private fun initControllerViews() {
-        ibPlay = playerView.findViewById(R.id.ib_exo_play_pause)
-        ibFullScreen = playerView.findViewById(R.id.ib_exo_fullscreen)
-        ibBack = playerView.findViewById(R.id.ib_exo_back)
-        tvTitleFullScreen = playerView.findViewById(R.id.tv_exo_title)
-        ibRewind = playerView.findViewById(R.id.ib_exo_rew)
-        ibForward = playerView.findViewById(R.id.ib_exo_ffwd)
-//        ibLock = playerView.findViewById(R.id.ib_exo_lock)
-//        ibPrevious = playerView.findViewById(R.id.ib_exo_prev)
-//        ibNext = playerView.findViewById(R.id.ib_exo_next)
-        tvCurrentTime = playerView.findViewById(R.id.tv_current_time_position)
-        tvTotalTime = playerView.findViewById(R.id.tv_total_time_duration)
-        topControls = playerView.findViewById(R.id.ll_top_control)
-        timeBar = playerView.findViewById(R.id.dtb_exo_progress)
-
-        ibPlay.setOnClickListener {
+        binding.ibExoPlayPause.setOnClickListener {
             player?.let {
                 if (it.isPlaying) it.pause() else it.play()
             }
         }
 
-        ibRewind.setOnClickListener {
+        binding.ibExoRew.setOnClickListener {
             player?.seekTo((player?.currentPosition?.minus(10000) ?: 0).coerceAtLeast(0))
         }
 
-        ibForward.setOnClickListener {
+        binding.ibExoFfwd.setOnClickListener {
             player?.seekTo(
                 (player?.currentPosition?.plus(10000) ?: 0).coerceAtMost(
                     player?.duration ?: 0
@@ -853,25 +736,29 @@ class DetailActivity : AppCompatActivity() {
             )
         }
 
-        ibFullScreen.setOnClickListener {
+        binding.ibExoFullscreen.setOnClickListener {
             toggleFullscreen()
         }
 
-        ibBack.setOnClickListener {
+        binding.ibExoBack.setOnClickListener {
             if (isFullscreen) {
                 toggleFullscreen()
             } else {
-                // Return to main screen by clearing the activity stack
-                val intent = Intent(this, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
+                finish()
+            }
+        }
+
+        binding.ivBack.setOnClickListener {
+            if (isFullscreen) {
+                toggleFullscreen()
+            } else {
                 finish()
             }
         }
     }
 
     private fun updatePlayPauseButton() {
-        ibPlay.setImageResource(
+        binding.ibExoPlayPause.setImageResource(
             if (player?.isPlaying == true) R.drawable.ic_pause else R.drawable.ic_play
         )
     }
@@ -947,13 +834,13 @@ class DetailActivity : AppCompatActivity() {
 
     @OptIn(UnstableApi::class)
     private fun initTimeBar() {
-        timeBar.addListener(object : androidx.media3.ui.TimeBar.OnScrubListener {
+        binding.dtbExoProgress.addListener(object : androidx.media3.ui.TimeBar.OnScrubListener {
             override fun onScrubStart(timeBar: androidx.media3.ui.TimeBar, position: Long) {
                 player?.playWhenReady = false
             }
 
             override fun onScrubMove(timeBar: androidx.media3.ui.TimeBar, position: Long) {
-                tvCurrentTime.text = formatTime(position)
+                binding.tvCurrentTime.text = formatTime(position)
             }
 
             override fun onScrubStop(
@@ -974,11 +861,11 @@ class DetailActivity : AppCompatActivity() {
                             val currentPosition = it.currentPosition
                             val duration = it.duration
                             val bufferedPosition = it.bufferedPosition
-                            tvCurrentTime.text = formatTime(currentPosition)
-                            tvTotalTime.text = formatTime(duration)
-                            timeBar.setDuration(duration)
-                            timeBar.setPosition(currentPosition)
-                            timeBar.setBufferedPosition(bufferedPosition)
+                            binding.tvCurrentTime.text = formatTime(currentPosition)
+                            binding.tvTotalTime.text = formatTime(duration)
+                            binding.dtbExoProgress.setDuration(duration)
+                            binding.dtbExoProgress.setPosition(currentPosition)
+                            binding.dtbExoProgress.setBufferedPosition(bufferedPosition)
                         }
                     }
                     delay(1000)
@@ -1071,5 +958,66 @@ class DetailActivity : AppCompatActivity() {
         player?.release()
         player = null
         Log.d("hoho", "Player released")
+    }
+
+    private fun updateFilm(filmId: Int) {
+        Log.d("hoho", "Updating film with ID: $filmId")
+
+        // Lưu lịch sử của phim hiện tại trước khi chuyển
+        player?.let { currentPlayer ->
+            val currentHistory = HistoryMovie(
+                movieId = currentFilmId.toString(),
+                videoLink = currentVideoLink,
+                movieTitle = currentMovieTitle,
+                movieImage = currentMovieImage,
+                lastPosition = currentPlayer.currentPosition,
+                duration = currentPlayer.duration,
+                lastWatched = System.currentTimeMillis(),
+                episodeNumber = currentEpisodeNumber
+            )
+            Log.d("hoho", "Saving history before switching film: $currentHistory")
+            lifecycleScope.launch {
+                detailViewModel.insertOrUpdate(currentHistory)
+            }
+        }
+
+        // Reset trạng thái
+        currentFilmId = filmId
+        currentVideoLink = ""
+        currentEpisodeNumber = ""
+        playbackPosition = 0L
+        isPhimBo = false
+        isFullscreen = false
+        currentMovieTitle = ""
+        currentMovieImage = ""
+
+        // Reset trình phát
+        player?.let {
+            it.stop()
+            it.clearMediaItems()
+            Log.d("hoho", "Player reset for new film")
+        } ?: Log.w("hoho", "Player is null during reset")
+
+        // Reset adapters
+        episodeAdapter.submitList(emptyList())
+        episodeFullScreenAdapter.submitList(emptyList())
+        relatedFilmAdapter.submitList(emptyList())
+        filmFullscreenAdapter.submitList(emptyList())
+        Log.d("hoho", "Adapters reset")
+
+        // Reset giao diện
+        binding.tvNameFilm.text = ""
+        binding.tvLuotXem.text = ""
+        binding.tvDecription.text = ""
+        binding.tvTitleFullScreen.text = ""
+        binding.bottomSheet.recyclerViewPhimBo.visibility = View.GONE
+        binding.bottomSheet.recyclerViewPhimLe.visibility = View.GONE
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        updateFullscreenState()
+        Log.d("hoho", "UI reset")
+
+        // Tải dữ liệu phim mới
+        viewModel.fetchFilmDetail(filmId, "")
+        Log.d("hoho", "Fetching film detail for ID: $filmId")
     }
 }

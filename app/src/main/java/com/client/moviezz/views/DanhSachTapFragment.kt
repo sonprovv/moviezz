@@ -11,24 +11,26 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.client.moviezz.R
 import com.client.moviezz.adapters.EpisodeListAdapter
+import com.client.moviezz.databinding.FragmentDanhSachTapBinding
 import com.client.moviezz.models.SubVideo
 import com.client.moviezz.viewmodel.MovieViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 @Suppress("DEPRECATION")
 class DanhSachTapFragment : Fragment() {
-    private lateinit var recyclerView: RecyclerView
+    private var _binding: FragmentDanhSachTapBinding? = null
+    private val binding get() = _binding!!
     private lateinit var episodeAdapter: EpisodeListAdapter
     private lateinit var viewModel: MovieViewModel
     private var onEpisodeClick: ((SubVideo) -> Unit)? = null
     private lateinit var sharedEpisodeViewModel: MovieViewModel.SharedEpisodeViewModel
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_danh_sach_tap, container, false)
+    ): View {
+        _binding = FragmentDanhSachTapBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -37,15 +39,9 @@ class DanhSachTapFragment : Fragment() {
         // Gán ViewModel từ activity
         viewModel = ViewModelProvider(requireActivity())[MovieViewModel::class.java]
 
-        recyclerView = view.findViewById(R.id.recycler_view_danh_sach_tap)
         episodeAdapter = EpisodeListAdapter()
-        recyclerView.adapter = episodeAdapter
-//        recyclerView.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        binding.recyclerViewDanhSachTap.adapter = episodeAdapter
         sharedEpisodeViewModel = ViewModelProvider(requireActivity())[MovieViewModel.SharedEpisodeViewModel::class.java]
-
-//        sharedEpisodeViewModel.selectedEpisode.observe(viewLifecycleOwner) { episode ->
-//            episodeAdapter.setSelectedEpisode(episode)
-//        }
 
         // Xử lý sự kiện click tập phim
         episodeAdapter.onItemClick = { subVideo ->
@@ -78,8 +74,12 @@ class DanhSachTapFragment : Fragment() {
         if (index in sortepisodes.indices) {
             val selectedEpisode = sortepisodes[index]
             episodeAdapter.setSelectedEpisode(selectedEpisode)
-            recyclerView.scrollToPosition(index)
+            binding.recyclerViewDanhSachTap.scrollToPosition(index)
         }
+    }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

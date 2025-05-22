@@ -8,7 +8,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
@@ -16,12 +15,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
-import com.client.moviezz.R
 import com.client.moviezz.adapters.CategoryAdapter
 import com.client.moviezz.adapters.HistoryWatchMovieAdapter
 import com.client.moviezz.adapters.ViewPagerAdapter
+import com.client.moviezz.databinding.ActivityMainBinding
 import com.client.moviezz.db.room.AppDatabase
 import com.client.moviezz.models.Category
 import com.client.moviezz.models.PhotoViewPager
@@ -32,12 +30,7 @@ import me.relex.circleindicator.CircleIndicator3
 
 @Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
-    private lateinit var ivLogout: ImageView
-    private lateinit var ivSearch: ImageView
-    private lateinit var viewPager: ViewPager2
-    private lateinit var circleIndicator: CircleIndicator3
-    private lateinit var recyclerRecentlyWatched: RecyclerView
-    private lateinit var recyclerCatagory: RecyclerView
+    private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: MovieViewModel
     private lateinit var viewPagerAdapter: ViewPagerAdapter
     private lateinit var categoryAdapter: CategoryAdapter
@@ -49,11 +42,11 @@ class MainActivity : AppCompatActivity() {
     private val runnable = object : Runnable {
         override fun run() {
             if (photoList.isNotEmpty()) {
-                val currentItem = viewPager.currentItem
+                val currentItem = binding.viewPagerBander.currentItem
                 if (currentItem == photoList.size - 1) {
-                    viewPager.setCurrentItem(0, true)
+                    binding.viewPagerBander.setCurrentItem(0, true)
                 } else {
-                    viewPager.setCurrentItem(currentItem + 1, true)
+                    binding.viewPagerBander.setCurrentItem(currentItem + 1, true)
                 }
                 handler.postDelayed(this, 3000)
             }
@@ -64,24 +57,19 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         // Configure status bar
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = Color.TRANSPARENT
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
-        anhXa()
+        // Initialize adapters
+        categoryAdapter = CategoryAdapter()
+        binding.recyclerViewCategory.adapter = categoryAdapter
 
-//        // Check if we need to refresh data
-//        if (intent.getBooleanExtra("should_refresh", false)) {
-//            // Clear the intent to prevent multiple refreshes
-//            intent.removeExtra("should_refresh")
-//            // Call your API refresh method here
-//            viewModel.fetchMovies("")
-//        }
-
-        ivLogout.setOnClickListener {
+        binding.ivLogout.setOnClickListener {
             // Create confirmation dialog
             androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Xác nhận")
@@ -120,9 +108,8 @@ class MainActivity : AppCompatActivity() {
             historyRepository = historyRepository
         )
         Log.e("hoho", "historyWatchMovieadapter: " + historyWatchMovieadapter)
-        recyclerRecentlyWatched.adapter = historyWatchMovieadapter
-        recyclerRecentlyWatched.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-
+        binding.recyclerViewRecentlyWatched.adapter = historyWatchMovieadapter
+        binding.recyclerViewRecentlyWatched.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
         // Initialize ViewModel
         viewModel = ViewModelProvider(this)[MovieViewModel::class.java]
@@ -139,17 +126,17 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         )
-        viewPager.adapter = viewPagerAdapter
-        viewPager.offscreenPageLimit = 2
-        circleIndicator.setViewPager(viewPager)
+        binding.viewPagerBander.adapter = viewPagerAdapter
+        binding.viewPagerBander.offscreenPageLimit = 2
+        binding.circleMain.setViewPager(binding.viewPagerBander)
 
         // Handle search click
-        ivSearch.setOnClickListener {
+        binding.ivSearch.setOnClickListener {
             startActivity(Intent(this, SearchActivity::class.java))
         }
 
         // ViewPager callback
-        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+        binding.viewPagerBander.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 handler.removeCallbacks(runnable)
@@ -158,22 +145,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-
-        // Collect loading state from ViewModel
-//        lifecycleScope.launchWhenStarted {
-//            viewModel.loading.collectLatest { isLoading ->
-//                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-//            }
-//        }
-
-        // Collect error state from ViewModel
-//        lifecycleScope.launchWhenStarted {
-//            viewModel.error.collectLatest { errorMessage ->
-//                errorMessage?.let {
-//                    Toast.makeText(this@MainActivity, it, Toast.LENGTH_LONG).show()
-//                }
-//            }
-//        }
 
         // Collect history movies from Room
         lifecycleScope.launchWhenStarted {
@@ -189,7 +160,7 @@ class MainActivity : AppCompatActivity() {
                 photoList = movies.map { PhotoViewPager(it) }
                 Log.d("MainActivity", "Received ${photoList.size} movies")
                 viewPagerAdapter.updateData(photoList)
-                circleIndicator.setViewPager(viewPager)
+                binding.circleMain.setViewPager(binding.viewPagerBander)
                 if (photoList.isNotEmpty()) {
                     handler.postDelayed(runnable, 3000)
                 }
@@ -212,23 +183,6 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.fetchMovies("")
         viewModel.fetchCategoryList("")
-    }
-
-    private fun anhXa() {
-        ivLogout = findViewById(R.id.iv_logout)
-        ivSearch = findViewById(R.id.iv_search)
-        viewPager = findViewById(R.id.view_pager_bander)
-        circleIndicator = findViewById(R.id.circle_main)
-        recyclerRecentlyWatched = findViewById(R.id.recycler_view_recently_watched)
-        recyclerCatagory = findViewById(R.id.recycler_view_category)
-//        progressBar = findViewById(R.id.progress_bar)
-
-        // Initialize adapters
-        categoryAdapter = CategoryAdapter()
-        recyclerCatagory.adapter = categoryAdapter
-//        recyclerCatagory.layoutManager = LinearLayoutManager(this)
-//        recyclerRecentlyWatched.adapter = HistoryWatchMovieAdapter()
-//        recyclerRecentlyWatched.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
     override fun onDestroy() {
